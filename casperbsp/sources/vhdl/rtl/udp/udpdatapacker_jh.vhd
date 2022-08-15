@@ -211,6 +211,8 @@ architecture rtl of udpdatapacker_jh is
     signal lIPChecksum16                : std_logic_vector(15 downto 0);
     signal lIsMulticast               : std_logic;
     
+    signal lmulitcastmac              : std_logic_vector(47 downto 0);
+
     signal axis_reset_n : std_logic;
     
     signal fifo_axis_tvalid : std_logic;
@@ -674,7 +676,7 @@ state_val <= "001";
                                 --lDestinationIPAddress  <= byteswap(dest_ip_fifo_out);
                                 lDestinationIPAddress  <= dest_ip_fifo_out;
                                 lIsMulticast <= '0';
-                            elsif dest_ip_fifo_out(31 downto 31-3) = "111" then
+                            elsif dest_ip_fifo_out(31 downto 31-2) = "111" then
                                 -- Multicast IP.
                                 lIsMulticast <= '1';
                                 --lDestinationIPAddress  <= byteswap(dest_ip_fifo_out);
@@ -719,7 +721,9 @@ state_val <= "001";
                         if (lIsMulticast = '0') then
                             lPacketData(6*8  - 1 downto 0*8) <= ARPReadData(47 downto 0);
                         else
-                            lPacketData(6*8  - 1 downto 0*8) <= "0000000100000000010111100" & lDestinationIPAddress(22 downto 0);
+                            --lPacketData(6*8  - 1 downto 0*8) <= "0000000100000000010111100" & lDestinationIPAddress(22 downto 0);
+                            lmulitcastmac <= "0000000100000000010111100" & lDestinationIPAddress(22 downto 0);
+                            lPacketData(6*8  - 1 downto 0*8)<=byteswap(lmulitcastmac);
                         end if;
                         lPacketData(12*8 - 1 downto 6*8) <= byteswap(lSourceMACAddress);
                         lPacketData(14*8 - 1 downto 12*8) <= byteswap(C_RESPONSE_ETHER_TYPE);
